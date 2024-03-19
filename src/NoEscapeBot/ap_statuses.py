@@ -44,7 +44,7 @@ class Statuses:
         """
         Returns the statuses of all access points.
         """
-        return {self.get_status(ap) for ap in ACCESS_POINTS}
+        return {ap: self.get_status(ap) for ap in ACCESS_POINTS}
 
     def set_status(self, access_point: str, is_working: bool) -> None:
         """
