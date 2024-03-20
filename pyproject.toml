@@ -18,5 +18,5 @@ readme = "README.md"
 license = {file = "LICENSE"}
 
 dependencies = [
-  "discord.py"
+  "pycord"
 ]
