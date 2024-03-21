@@ -12,11 +12,14 @@ version = "2024.03.19"
 
 authors = [
   { name = "jahinzee", email = "jahinzee@outlook.com" },
-  { name = "JMA-256" }
+  { name = "JMA-256" },
+  { name = "Bev7787", email = "eregister2me@gmail.com" }
 ]
 readme = "README.md"
 license = {file = "LICENSE"}
 
 dependencies = [
-  "pycord"
+  "py-cord"
+  "os"
+  "dotenv"
 ]

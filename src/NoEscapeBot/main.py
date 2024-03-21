@@ -1,5 +1,10 @@
+import os
+from dotenv import load_dotenv
 import discord
 from discord import option
+
+# load env variables from .env
+load_dotenv()
 
 client = discord.Bot()
 
@@ -32,10 +37,7 @@ async def on_ready():
   print('Logged in as {0.user}'.format(client))
 
 if __name__ == "__main__":
-  # Get token from token.txt file
-  f = open("token.txt", 'r')
-  token = f.readline().rstrip()
   try:
-    client.run(token)
+    client.run(os.getenv('TOKEN'))
   except:
     print('Bot disconnected')
