@@ -5,6 +5,9 @@ build-backend = "hatchling.build"
 [tool.hatch.metadata]
 allow-direct-references = true
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/NoEscapeBot"]
+
 [project]
 name = "NoEscapeBot"
 description = "A Discord bot that tracks the availability of the escalators and lifts at Macquarie University Metro station."
@@ -19,7 +22,6 @@ readme = "README.md"
 license = {file = "LICENSE"}
 
 dependencies = [
-  "py-cord"
-  "os"
-  "dotenv"
+  "py-cord",
+  "python-dotenv"
 ]
