@@ -1,36 +1,26 @@
 import os
 from dotenv import load_dotenv
 import discord
-from discord import option
 
 # load env variables from .env
 load_dotenv()
 
 client = discord.Bot()
 
-# placeholder test group
-test = client.create_group("elevator", "testing functions")
+# cogs
+cogs_list = [
+  'query'
+]
+
+# load cogs in cogs_list
+for cog in cogs_list:
+    client.load_extension(f'cogs.{cog}')
 
 # placeholder commands
-
 # responds to command with "placeholder"
 @client.command(name="help")
 async def help(ctx):
   await ctx.respond("placeholder")
-
-# responds to command with user arguments, responds "none" otherwise.
-@test.command()
-@option("content", description="Enter something", default='none')
-async def tester(ctx, content):
-  if content != None:
-    await ctx.respond(content)
-  else:
-    await ctx.respond("none")
-
-# pings the user which sent the command
-@test.command()
-async def pinguser(ctx):
-  await ctx.respond(f'<@!{ctx.author.id}>')
 
 @client.event
 async def on_ready():
