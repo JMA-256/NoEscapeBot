@@ -16,12 +16,18 @@ def getCurrTime():
 def getStatus():
     return None
 
-# helper function for updating status
+# helper function for updating full status
+# TODO: Modify code to take the Status object as input and add all fields as needed.
 def statusUpdate(embed, location, status):
     if status:
         embed.add_field(name=location, value="✅", inline=True)
     else:
         embed.add_field(name=location, value="❌", inline=True)
+
+# TODO: Modify code to take the Status object as input and return a string to be added.
+def defaultStatusUpdate(embed, location, status):
+    return None
+
 
 class Query(commands.Cog):
 
@@ -61,14 +67,27 @@ class Query(commands.Cog):
         )
         statusUpdate(embed, "University Escalator Up", False)
         statusUpdate(embed, "University Escalator Down", True)
-        statusUpdate(embed, "University Elevator", True)
+        statusUpdate(embed, "University Lift", True)
         statusUpdate(embed, "Centre Escalator Up", True)
         statusUpdate(embed, "Centre Escalator Down", True)
-        statusUpdate(embed, "Centre Elevator", True)
-        statusUpdate(embed, "Concourse Escalator Up", True)
-        statusUpdate(embed, "Concourse Escalator Down", True)
-        statusUpdate(embed, "Concourse Elevator", True)
+        statusUpdate(embed, "Centre Lift", True)
+        statusUpdate(embed, "Platform Escalator Up", True)
+        statusUpdate(embed, "Platform Escalator Down", True)
+        statusUpdate(embed, "Platform Lift", True)
         await ctx.respond(embed=embed) 
+
+    @discord.command()
+    @option("location", description="Location and direction of travel to be updated.", required=True, choices=['University Escalator Up', 'University Escalator Down', 'University Lift', 
+                                                                                                                'Centre Escalator Up', 'Centre Escalator Down', 'Centre Lift', 
+                                                                                                                'Platform Escalator Up', 'Platform Escalator Down', 'Platform Lift'])
+    @option("status", description="Working/Broken", required=True, choices=['working', 'broken'])
+    async def update(self, 
+                     ctx: discord.ApplicationContext, location, status):
+        is_working = True
+        if status.lower() == 'broken':
+            is_working = False
+        await ctx.respond(f'Setting status of {location}.\n{location} working is {is_working} as of <t:{getCurrTime()}>.')
+        
 
 def setup(bot): # this is called by Pycord to setup the cog
     bot.add_cog(Query(bot))
