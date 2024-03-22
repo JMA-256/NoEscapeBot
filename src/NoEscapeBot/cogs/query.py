@@ -2,8 +2,26 @@ import discord
 from discord.ext import commands
 from discord.commands import SlashCommandGroup
 from discord import option
-import datetime
-import time
+from datetime import datetime
+
+def datetimeToDiscord(input_time):
+    return int(input_time)
+
+def getCurrTime():
+    return int(datetime.timestamp(datetime.now()))
+
+# Helper function to query data from the backend to assemble /status
+# Query object will be a list of locations JSON with {Name: string, Status: bool, Verified: timestamp or null}
+# Return string with list of broken locations and verified timestamp (if any)
+def getStatus():
+    return None
+
+# helper function for updating status
+def statusUpdate(embed, location, status):
+    if status:
+        embed.add_field(name=location, value="✅", inline=True)
+    else:
+        embed.add_field(name=location, value="❌", inline=True)
 
 class Query(commands.Cog):
 
@@ -22,23 +40,34 @@ class Query(commands.Cog):
         else:
             await ctx.respond("none")
 
-    # pings the user which sent the command
-    @test.command()
+    # Status command with default behaviour.
+    @discord.command()
     async def status(self, ctx: discord.ApplicationContext):
         embed = discord.Embed(
             title="MQ Station Status",
-            description=f"Status as of <t:{int(time.mktime((datetime.datetime.now()).timetuple()))}>",
+            description=f"Status as of <t:{getCurrTime()}>",
+            color=discord.Colour.brand_green() # Pycord provides a class with default colors you can choose from
+        )   
+        embed.add_field(name="The following elevators/escalators are broken:", value="None", inline=True)
+        await ctx.respond(embed=embed) 
+
+    # Status command displaying the status of all possible locations.
+    @discord.command()
+    async def fullstatus(self, ctx: discord.ApplicationContext):
+        embed = discord.Embed(
+            title="MQ Station Status",
+            description=f"Status as of <t:{getCurrTime()}>",
             color=discord.Colour.brand_green() # Pycord provides a class with default colors you can choose from
         )
-        embed.add_field(name="University Escalator Up", value="Status", inline=True)
-        embed.add_field(name="University Escalator Down", value="Status", inline=True)
-        embed.add_field(name="University Elevator", value="Status", inline=True)
-        embed.add_field(name="Centre Escalator Up", value="Status", inline=True)
-        embed.add_field(name="Centre Escalator Down", value="Status", inline=True)
-        embed.add_field(name="Centre Elevator", value="Status", inline=True)
-        embed.add_field(name="Concourse Escalator Up", value="Status", inline=True)
-        embed.add_field(name="Concourse Escalator Down", value="Status", inline=True)
-        embed.add_field(name="Concourse Elevator", value="Status", inline=True)
+        statusUpdate(embed, "University Escalator Up", False)
+        statusUpdate(embed, "University Escalator Down", True)
+        statusUpdate(embed, "University Elevator", True)
+        statusUpdate(embed, "Centre Escalator Up", True)
+        statusUpdate(embed, "Centre Escalator Down", True)
+        statusUpdate(embed, "Centre Elevator", True)
+        statusUpdate(embed, "Concourse Escalator Up", True)
+        statusUpdate(embed, "Concourse Escalator Down", True)
+        statusUpdate(embed, "Concourse Elevator", True)
         await ctx.respond(embed=embed) 
 
 def setup(bot): # this is called by Pycord to setup the cog
