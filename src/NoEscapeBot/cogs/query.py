@@ -3,6 +3,9 @@ from discord.ext import commands
 from discord.commands import SlashCommandGroup
 from discord import option
 from datetime import datetime
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Dictionary of locations comprising of location names and the last status update message ID.
 # Key corresponds to location ID in backend.
@@ -129,6 +132,31 @@ class Query(commands.Cog):
 
         except ValueError:
             await ctx.respond(f'This location already has been reported!', delete_after=2)
+
+    # Detect reaction and increment reaction count by 1
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        # Bot should not count itself as a reaction.
+        if (payload.emoji.name == '✅' and payload.user_id != os.getenv('BOT_ID')):
+            for key, value in locations.items():
+                channel = self.bot.get_channel(payload.channel_id)
+                if payload.message_id == value['message']:
+                    # Test functionality- responds with reaction added and link to message
+                    message = await channel.send(f'Reaction added to https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
+                    await message.edit(suppress=True)
+
+            
+    # Detect removal of reaction and decrement counter by 1
+    @commands.Cog.listener()
+    async def on_raw_reaction_remove(self, payload):
+        # env variable not needed as the bot should not remove its own reaction.
+        if (payload.emoji.name == '✅'):
+            for key, value in locations.items():
+                channel = self.bot.get_channel(payload.channel_id)
+                if payload.message_id == value['message']:
+                    # Test functionality- responds with reaction added and link to message
+                    message = await channel.send(f'Reaction removed from https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
+                    await message.edit(suppress=True)
         
 
 def setup(bot): # this is called by Pycord to setup the cog
