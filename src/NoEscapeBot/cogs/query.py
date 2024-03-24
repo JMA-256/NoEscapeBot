@@ -5,7 +5,11 @@ from discord import option
 from datetime import datetime
 import os
 from dotenv import load_dotenv
+import ap_statuses
 load_dotenv()
+
+# Location statuses
+location_status = ap_statuses.Statuses()
 
 # Dictionary of locations comprising of location names and the last status update message ID.
 # Key corresponds to location ID in backend.
@@ -28,24 +32,48 @@ def datetimeToDiscord(input_time):
 def getCurrTime():
     return int(datetime.timestamp(datetime.now()))
 
-# TODO:
+
 # Helper function to query data from the backend to assemble /status
-# Query object will be a list of locations JSON with {Name: string, Status: bool, Verified: timestamp or null}
+# Query object will be a dict of locations with {Name: string, Status: bool, Verified: timestamp or null}
 # Return string with list of broken locations and verified timestamp (if any)
 def getStatus():
-    return None
+    status = location_status.get_all_statuses()
+    broken_locations = []
+    for key, val in status.items():
+        if val['is_working'] == False:
+            broken_locations.append(key)
+    return broken_locations
+
+def defaultStatusUpdate():
+    broken_locations = getStatus()
+    message = ""
+    for key in broken_locations:
+        val = location_status.get_status(key)['verified']
+        name = locations[key]['name']
+        if val == None:
+            message += f"- {name}\n"
+        else:
+            message += f"- {name} (Verified as of <t:{datetimeToDiscord(val)}>)\n"
+    if (len(message) == 0):
+        message += "All locations working!"
+    return message
 
 # helper function for updating full status
-# TODO: Modify code to take the Status object as input and add all fields as needed.
-def statusUpdate(embed, location, status):
-    if status:
-        embed.add_field(name=location, value="✅", inline=True)
-    else:
-        embed.add_field(name=location, value="❌", inline=True)
-
-# TODO: Modify code to take the Status object as input and return a string to be added.
-def defaultStatusUpdate(embed, location, status):
-    return None
+def statusUpdate(embed):
+    status = location_status.get_all_statuses()
+    for key, val in status.items():
+        if val['is_working'] == True:
+            if val['verified'] == None:
+                embed.add_field(name=locations[key]['name'], value="✅", inline=True)
+            else:
+                time = datetimeToDiscord(val['verified'])
+                embed.add_field(name=locations[key]['name'], value=f"✅\nVerified at <t:{datetimeToDiscord(time)}>", inline=True)
+        else:
+            if val['verified'] == None:
+                embed.add_field(name=locations[key]['name'], value="❌", inline=True)
+            else:
+                time = datetimeToDiscord(val['verified'])
+                embed.add_field(name=locations[key]['name'], value=f"❌\nVerified at <t:{datetimeToDiscord(time)}>", inline=True)
 
 
 class Query(commands.Cog):
@@ -73,7 +101,7 @@ class Query(commands.Cog):
             description=f"Status as of <t:{getCurrTime()}>",
             color=discord.Colour.brand_green() # Pycord provides a class with default colors you can choose from
         )   
-        embed.add_field(name="The following elevators/escalators are broken:", value="None", inline=True)
+        embed.add_field(name="The following lifts/escalators are broken:", value=defaultStatusUpdate(), inline=True)
         await ctx.respond(embed=embed) 
 
     # Status command displaying the status of all possible locations.
@@ -85,16 +113,7 @@ class Query(commands.Cog):
             description=f"Status as of <t:{getCurrTime()}>",
             color=discord.Colour.brand_green() # Pycord provides a class with default colors you can choose from
         )
-        # Add fields corresponding to each location. Boolean values are placeholders.
-        statusUpdate(embed, locations['mquni-escalator-up']['name'], False)
-        statusUpdate(embed, locations['mquni-escalator-down']['name'], True)
-        statusUpdate(embed, locations['mquni-lift']['name'], True)
-        statusUpdate(embed, locations['mqcentre-escalator-up']['name'], True)
-        statusUpdate(embed, locations['mqcentre-escalator-down']['name'], True)
-        statusUpdate(embed, locations['mqcentre-lift']['name'], True)
-        statusUpdate(embed, locations['concourse-escalator-up']['name'], True)
-        statusUpdate(embed, locations['concourse-escalator-down']['name'], True)
-        statusUpdate(embed, locations['concourse-lift']['name'], True)
+        statusUpdate(embed)
         await ctx.respond(embed=embed) 
 
     # Update command takes user arguments and updates the status of the location provided.
@@ -116,13 +135,15 @@ class Query(commands.Cog):
             is_working = True
             if status.lower() == 'broken':
                 is_working = False
+
+            location_status.set_status(location, is_working, ctx.author)
             
             # Create the response message
             location_name = locations[location]['name']
             embed = discord.Embed(
                 title=f'Status update for {location_name}',
                 description=f"{status.capitalize()} as of <t:{getCurrTime()}>",
-                color=discord.Colour.red() # Pycord provides a class with default colors you can choose from
+                color=discord.Colour.red()
             )
             # Give user acknowledgement, send the status update message, add the tick reaction and store the message ID in the locations dict.
             await ctx.respond(f'Report received!', delete_after=2)
@@ -136,14 +157,15 @@ class Query(commands.Cog):
     # Detect reaction and increment reaction count by 1
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        # Bot should not count itself as a reaction.
-        if (payload.emoji.name == '✅' and payload.user_id != os.getenv('BOT_ID')):
+        # TODO: Bot should not count itself as a reaction using payload.user_id != os.getenv('BOT_ID') (Removed due to unexpected behaviour for now.)
+        if (payload.emoji.name == '✅'):
             for key, value in locations.items():
-                channel = self.bot.get_channel(payload.channel_id)
                 if payload.message_id == value['message']:
-                    # Test functionality- responds with reaction added and link to message
-                    message = await channel.send(f'Reaction added to https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
-                    await message.edit(suppress=True)
+                    location_status.verify_status(key)
+                    # print(location_status.get_status(key)['votes'])
+                    # Test functionality- responds with reaction added and link to message. Final functionality will increment count in backend.
+                    # message = await channel.send(f'Reaction added to https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
+                    # await message.edit(suppress=True)
 
             
     # Detect removal of reaction and decrement counter by 1
@@ -154,9 +176,11 @@ class Query(commands.Cog):
             for key, value in locations.items():
                 channel = self.bot.get_channel(payload.channel_id)
                 if payload.message_id == value['message']:
-                    # Test functionality- responds with reaction added and link to message
-                    message = await channel.send(f'Reaction removed from https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
-                    await message.edit(suppress=True)
+                    location_status.unverify_status(key)
+                    # print(location_status.get_status(key)['votes'])
+                    # Test functionality- responds with reaction added and link to message. Final functionality will decrement count in backend.
+                    # message = await channel.send(f'Reaction removed from https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
+                    # await message.edit(suppress=True)
         
 
 def setup(bot): # this is called by Pycord to setup the cog
