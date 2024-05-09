@@ -188,6 +188,14 @@ class Query(commands.Cog):
                     # message = await channel.send(f'Reaction removed from https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
                     # await message.edit(suppress=True)
         
+    @discord.command()
+    async def chatswood(self, ctx: discord.ApplicationContext):
+        embed = discord.Embed(
+            title="Chatswood",
+            description=f"Holy shit I cannot believe that the P3 escalators at Chatswood has been offline FOR THREE WEEKS. I HAVE TO GO ON THE STAIRS FOR THREE WEEKS. smh",
+            color=discord.Colour.brand_red() # Pycord provides a class with default colors you can choose from
+        )
+        await ctx.respond(embed=embed)
 
 def setup(bot): # this is called by Pycord to setup the cog
     bot.add_cog(Query(bot))

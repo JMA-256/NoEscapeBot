@@ -28,7 +28,7 @@ ACCESS_POINTS = [
     "mqcentre-lift",
 ]
 
-VERIFICATION_THRESHOLD = 5
+VERIFICATION_THRESHOLD = 2
 DEFAULT_USER = "System"
 
 

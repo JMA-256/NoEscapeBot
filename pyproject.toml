@@ -23,5 +23,6 @@ license = {file = "LICENSE"}
 
 dependencies = [
   "py-cord",
-  "python-dotenv"
+  "python-dotenv",
+  "pointers.py"
 ]
