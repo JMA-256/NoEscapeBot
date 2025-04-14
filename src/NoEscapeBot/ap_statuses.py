@@ -33,7 +33,6 @@ DEFAULT_USER = "System"
 
 
 class Statuses:
-
     def __init__(self) -> None:
         self._statuses = {ap: True for ap in ACCESS_POINTS}
         self._timestamp_reported = {ap: None for ap in ACCESS_POINTS}
@@ -70,7 +69,7 @@ class Statuses:
         if user is None:
             return DEFAULT_USER
         # discriminator = f"#{User.discriminator}" if User.discriminator != 0 else ""
-        return User.name
+        return user.name
 
     def is_verified(self, access_point):
         """
@@ -167,6 +166,7 @@ def _test() -> None:
     """
     from pprint import pprint
     from time import sleep
+
     print("### This is a sample REPL-style usage of the ap_statuses module. ###")
     print("\n# Initialising object\n")
     print(">>> s = Statuses()")
@@ -175,10 +175,12 @@ def _test() -> None:
     pprint(s.get_all_statuses())
     print("\n# New report that mquni-lift is down")
     print("# NOTE: the User object is not properly set up for this test.\n")
+
     class User:
         def __init__(self):
             self.name = "Clyde"
             self.discriminator = 0
+
     print(">>> s.set_status('mquni-lift', False, User())")
     s.set_status("mquni-lift", False, User())
     print(">>> s.get_status('mquni-lift')\n")
@@ -187,7 +189,7 @@ def _test() -> None:
     print(f">>> for i in range(0, {VERIFICATION_THRESHOLD}): # verification threshold")
     print("...     s.verify_status('mquni-lift')")
     for i in range(0, VERIFICATION_THRESHOLD):
-        s.verify_status('mquni-lift')        
+        s.verify_status("mquni-lift")
     print(">>> s.get_status('mquni-lift')\n")
     pprint(s.get_status("mquni-lift"))
     print("\n# Some time passes...")
@@ -196,13 +198,16 @@ def _test() -> None:
     print(">>> s.update()")
     print(">>> s.get_status('mquni-lift')\n")
     pprint(s.get_status("mquni-lift"))
-    print("## Notice how the update didn't re-refresh the timestamp -\n## it only does it when it's None.")
+    print(
+        "## Notice how the update didn't re-refresh the timestamp -\n## it only does it when it's None."
+    )
     print("\n# Someone takes away vote\n")
     print(">>> s.unverify_status('mquni-lift')")
-    s.unverify_status('mquni-lift')
+    s.unverify_status("mquni-lift")
     print(">>> s.get_status('mquni-lift')\n")
     pprint(s.get_status("mquni-lift"))
     print()
+
 
 if __name__ == "__main__":
     _test()

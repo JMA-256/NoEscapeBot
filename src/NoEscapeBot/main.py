@@ -29,5 +29,5 @@ async def on_ready():
 if __name__ == "__main__":
   try:
     client.run(os.getenv('TOKEN'))
-  except:
+  finally:
     print('Bot disconnected')
