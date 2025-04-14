@@ -38,7 +38,7 @@ class Statuses:
         self._statuses = {ap: True for ap in ACCESS_POINTS}
         self._timestamp_reported = {ap: None for ap in ACCESS_POINTS}
         self._timestamp_verified = {ap: None for ap in ACCESS_POINTS}
-        self._users = {ap: None for ap in ACCESS_POINTS}
+        self._users = {ap: DEFAULT_USER for ap in ACCESS_POINTS}
         self._votes = {ap: 0 for ap in ACCESS_POINTS}
 
     def get_status(self, access_point: str) -> str:
@@ -62,16 +62,15 @@ class Statuses:
             "is_working": self._statuses[access_point],
             "reported": self._timestamp_reported[access_point],
             "verified": self._timestamp_verified[access_point],
-            "user": self._stringify_user(self._users[access_point]),
+            "user": self._users[access_point],
             "votes": self._votes[access_point],
         }
 
     def _stringify_user(self, user: User) -> str:
         if user is None:
             return DEFAULT_USER
-        username = User.name
-        discriminator = f"#{User.discriminator}" if User.discriminator != 0 else ""
-        return f"{username}{discriminator}"
+        # discriminator = f"#{User.discriminator}" if User.discriminator != 0 else ""
+        return User.name
 
     def is_verified(self, access_point):
         """
@@ -112,7 +111,7 @@ class Statuses:
         self._statuses[access_point] = is_working
         self._timestamp_reported[access_point] = current_timestamp
         self._timestamp_verified[access_point] = None
-        self._users[access_point] = reporting_user
+        self._users[access_point] = self._stringify_user(reporting_user)
         self._votes[access_point] = 0
 
     def update(self):
