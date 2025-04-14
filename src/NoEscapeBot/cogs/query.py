@@ -163,30 +163,25 @@ class Query(commands.Cog):
     # Detect reaction and increment reaction count by 1
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        # TODO: Bot should not count itself as a reaction using payload.user_id != os.getenv('BOT_ID') 
-        # (Removed due to unexpected behaviour for now.)
+        if (payload.user_id == os.getenv('BOT_ID')):
+            return
         if (payload.emoji.name == '✅'):
             for key, value in locations.items():
                 if payload.message_id == value['message']:
                     location_backend.verify_status(key)
-                    # print(location_backend.get_status(key)['votes'])
-                    # Test functionality- responds with reaction added and link to message. 
-                    # message = await channel.send(f'Reaction added to https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
-                    # await message.edit(suppress=True)
+                    # Test functionality- prints message reaction has been added to to console
+                    print(f'Reaction added to https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
 
             
     # Detect removal of reaction and decrement counter by 1
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
-        # env variable not needed as the bot should not remove its own reaction.
+        if (payload.user_id == os.getenv('BOT_ID')):
+            return
         if (payload.emoji.name == '✅'):
             for key, value in locations.items():
                 if payload.message_id == value['message']:
                     location_backend.unverify_status(key)
-                    # print(location_backend.get_status(key)['votes'])
-                    # Test functionality- responds with reaction added and link to message.
-                    # message = await channel.send(f'Reaction removed from https://discord.com/channels/{payload.guild_id}/{payload.channel_id}/{payload.message_id}.')
-                    # await message.edit(suppress=True)
         
 
 def setup(bot): # this is called by Pycord to setup the cog
